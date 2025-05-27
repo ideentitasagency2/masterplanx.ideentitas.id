@@ -1,41 +1,49 @@
-const midtransClient = require("midtrans-client");
+// app/api/generate/route.js
 
-module.exports = async (req, res) => {
-  // CORS headers
+import midtransClient from "midtrans-client";
+
+export async function OPTIONS(request) {
+  const origin = request.headers.get("origin");
   const allowedOrigins = [
     'https://ideentitas.id',
     'https://www.ideentitas.id',
     'https://masterplanx.ideentitas.id'
   ];
-  const origin = req.headers.origin;
+
+  const headers = {
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Credentials': 'true',
+    'Vary': 'Origin'
+  };
+
   if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  res.setHeader('Vary', 'Origin');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    headers['Access-Control-Allow-Origin'] = origin;
   }
 
-  // Handle unsupported methods
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  return new Response(null, { status: 200, headers });
+}
+
+export async function POST(request) {
+  const origin = request.headers.get("origin");
+  const allowedOrigins = [
+    'https://ideentitas.id',
+    'https://www.ideentitas.id',
+    'https://masterplanx.ideentitas.id'
+  ];
+
+  const headers = {
+    'Access-Control-Allow-Credentials': 'true',
+    'Vary': 'Origin'
+  };
+
+  if (allowedOrigins.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
   }
 
   try {
-    // 🔥 Parse request body
-    const buffers = [];
-    for await (const chunk of req) {
-      buffers.push(chunk);
-    }
-    const body = JSON.parse(Buffer.concat(buffers).toString());
+    const body = await request.json();
 
-    // Midtrans logic
-    const midtransClient = require('midtrans-client');
     const snap = new midtransClient.Snap({
       isProduction: process.env.NODE_ENV === 'production',
       serverKey: process.env.MIDTRANS_SERVER_KEY,
@@ -45,13 +53,24 @@ module.exports = async (req, res) => {
     const transaction = await snap.createTransaction(body);
 
     if (!transaction.token) {
-      return res.status(204).end();
+      return new Response(null, { status: 204, headers });
     }
 
-    res.status(200).json({ token: transaction.token });
+    return new Response(JSON.stringify({ token: transaction.token }), {
+      status: 200,
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json'
+      }
+    });
 
   } catch (error) {
-    // ✅ Make sure error responses also include CORS headers
-    res.status(500).json({ error: error.message });
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json'
+      }
+    });
   }
-};
+}
