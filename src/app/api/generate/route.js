@@ -1,5 +1,3 @@
-// app/api/generate/route.js
-
 import midtransClient from "midtrans-client";
 
 export async function OPTIONS(request) {
