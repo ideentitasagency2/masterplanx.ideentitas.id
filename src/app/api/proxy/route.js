@@ -32,28 +32,14 @@ export async function POST(request) {
       body: JSON.stringify(data)
     });
 
-    const raw = await response.text();
-    console.log('Raw response from Google Apps Script:', raw);
+    const rawText = await response.text();
+    console.log('Raw response from Google Apps Script:', rawText);
 
-    let result;
-    try {
-      result = JSON.parse(raw);
-    } catch (err) {
-      console.error('Failed to parse response JSON:', err);
-      return new Response(JSON.stringify({ error: 'Invalid JSON from Google Apps Script' }), {
-        status: 502,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-
-    return new Response(JSON.stringify(result), {
+    return new Response(rawText, {
       status: 200,
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
+        'Content-Type': 'text/plain'
       }
     });
   } catch (error) {
