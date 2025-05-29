@@ -10,16 +10,45 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
-  const { data } = await request.json();
-  
+  let data;
   try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbzYP01sjtPp5SlZazfgGoUhbIHICi-4xr8-nUMlylnWuXDCj0IE84yaqBBwfnojeq9v/exec', {
+    const body = await request.text();
+    data = JSON.parse(body);
+  } catch (err) {
+    console.error('Invalid JSON body:', err);
+    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+      status: 400,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
+      }
+    });
+  }
+
+  try {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbwNx077Cb8gxRP5Z-c8-U4Iy07zPyKICGsCQpgC4yu8fzrCmb0EKvabl65-QWQEPBU/exec', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
 
-    const result = await response.json();
+    const raw = await response.text();
+    console.log('Raw response from Google Apps Script:', raw);
+
+    let result;
+    try {
+      result = JSON.parse(raw);
+    } catch (err) {
+      console.error('Failed to parse response JSON:', err);
+      return new Response(JSON.stringify({ error: 'Invalid JSON from Google Apps Script' }), {
+        status: 502,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: {
@@ -28,6 +57,7 @@ export async function POST(request) {
       }
     });
   } catch (error) {
+    console.error('Fetch failed:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: {
