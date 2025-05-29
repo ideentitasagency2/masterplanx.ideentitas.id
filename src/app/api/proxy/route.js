@@ -26,7 +26,7 @@ export async function POST(request) {
   }
 
   try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbwNx077Cb8gxRP5Z-c8-U4Iy07zPyKICGsCQpgC4yu8fzrCmb0EKvabl65-QWQEPBU/exec', {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbzkcvpGrPrUn-ktteVcmCqeYX72RaMteTprb3NgYQpghuQlkfg6mhMIgWu1vJqzrEk/exec', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
